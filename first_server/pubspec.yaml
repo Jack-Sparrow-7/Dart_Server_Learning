@@ -9,6 +9,9 @@ environment:
 dependencies:
   shelf: ^1.4.2
   shelf_router: ^1.1.2
+  dotenv: ^4.2.0
+  mongo_dart: ^0.10.5
+  bcrypt: ^1.2.0
 
 dev_dependencies:
   http: ^1.2.2
