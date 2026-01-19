@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:dart_frog/dart_frog.dart';
-import 'package:firedart/firedart.dart';
+import 'package:mongo_dart/mongo_dart.dart';
 
 Future<Response> onRequest(
   RequestContext context,
@@ -15,7 +15,7 @@ Future<Response> onRequest(
     _ => Future.value(
       Response.json(
         statusCode: HttpStatus.methodNotAllowed,
-        body: {'message': 'Method Not Allowed.'},
+        body: {'message': 'Method not allowed.'},
       ),
     ),
   };
@@ -23,24 +23,43 @@ Future<Response> onRequest(
 
 Future<Response> _updateList(RequestContext context, String id) async {
   final body = await context.request.json() as Map<String, dynamic>;
-  final name = body['name'] as String?;
 
-  await Firestore.instance.collection('tasklists').document(id).update({
-    'name': name,
-  });
+  final name = body['name'];
 
-  return Response(
-    statusCode: HttpStatus.noContent,
-  );
-}
+  final db = context.read<Db>();
 
-Future<Response> _deleteList(RequestContext context, String id) async {
   try {
-    await Firestore.instance.collection('tasklists').document(id).delete();
+    await db
+        .collection('lists')
+        .updateOne(
+          where.eq('_id', ObjectId.fromHexString(id)),
+          modify.set('name', name),
+        );
+
     return Response(
       statusCode: HttpStatus.noContent,
     );
   } on Exception {
-    return Response(statusCode: HttpStatus.badRequest);
+    return Response(
+      statusCode: HttpStatus.badRequest,
+    );
+  }
+}
+
+Future<Response> _deleteList(RequestContext context, String id) async {
+  final db = context.read<Db>();
+
+  try {
+    await db
+        .collection('lists')
+        .deleteOne(where.eq('_id', ObjectId.fromHexString(id)));
+
+    return Response(
+      statusCode: HttpStatus.noContent,
+    );
+  } on Exception {
+    return Response(
+      statusCode: HttpStatus.badRequest,
+    );
   }
 }
